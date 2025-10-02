@@ -28,16 +28,20 @@ public class movimento3d : MonoBehaviour
     void Update()
     {
         // Movimento do Mouse
+        /*
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        */
 
         // Rotação vertical (câmera)
+        /*
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -90f, 90f); // Limita olhar pra cima/baixo
         playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
         // Rotação horizontal (player)
         transform.Rotate(Vector3.up * mouseX);
+        */
 
         // Movimento Horizontal/Vertical
         float moveX = Input.GetAxis("Horizontal");
