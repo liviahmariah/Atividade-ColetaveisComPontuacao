@@ -10,13 +10,13 @@ public class CameraTopDownOffset : MonoBehaviour
     {
         if (player != null)
         {
-            // Aplica a rotação do player no offset
+           
             Vector3 posicaoAlvo = player.position + player.rotation * offset;
 
-            // Movimento suave até a posição
+           
             transform.position = Vector3.Lerp(transform.position, posicaoAlvo, Time.deltaTime * suavidade);
 
-            // Faz a câmera olhar para o player
+            
             transform.LookAt(player.position);
         }
     }

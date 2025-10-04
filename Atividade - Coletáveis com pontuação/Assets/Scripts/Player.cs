@@ -6,93 +6,64 @@ public class PlayerController3D : MonoBehaviour
     [Header("Movimento")]
     public float velocidade = 5f;
     public float forcaPulo = 6f;
+    public float gravidade = -9.81f;
     public float velocidadeRotacao = 10f;
 
-    [Header("Ground Check (opcional)")]
-    public Transform groundCheck;
-    public float groundCheckRadius = 0.2f;
-    public LayerMask groundMask;
-
-    [Header("Debug")]
-    public bool debugMode = false;
+    [Header("Referência da Câmera")]
+    public Transform cameraTransform;
 
     private CharacterController controller;
-    private Vector3 velocidadeVertical; // Para gravidade e pulo
-    private bool jumpRequest;
+    private Vector3 velocidadeJogador;
     private bool isGrounded;
-    private float gravidade = -9.81f;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
+
+        if (cameraTransform == null && Camera.main != null)
+            cameraTransform = Camera.main.transform; 
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-            jumpRequest = true;
+    
+        isGrounded = controller.isGrounded;
 
-        // Ground check
-        if (groundCheck != null)
+        if (isGrounded && velocidadeJogador.y < 0)
+            velocidadeJogador.y = -2f;
+
+       
+        float moveX = Input.GetAxis("Horizontal");
+        float moveZ = Input.GetAxis("Vertical");
+
+        Vector3 forward = cameraTransform.forward;
+        forward.y = 0f;
+        forward.Normalize();
+
+        Vector3 right = cameraTransform.right;
+        right.y = 0f;
+        right.Normalize();
+
+        Vector3 move = (forward * moveZ + right * moveX).normalized;
+
+
+        controller.Move(move * velocidade * Time.deltaTime);
+
+        
+        if (move.magnitude >= 0.1f)
         {
-            isGrounded = Physics.CheckSphere(groundCheck.position, groundCheckRadius, groundMask);
-            if (debugMode) Debug.Log($"CheckSphere Grounded={isGrounded}");
-        }
-        else
-        {
-            isGrounded = Physics.Raycast(transform.position, Vector3.down, 0.1f + controller.height / 2f, groundMask);
-            if (debugMode) Debug.Log($"Raycast Grounded={isGrounded}");
+            Quaternion rotacaoAlvo = Quaternion.LookRotation(move, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotacaoAlvo, velocidadeRotacao * Time.deltaTime);
         }
 
-        if (isGrounded && velocidadeVertical.y < 0)
-        {
-            velocidadeVertical.y = -2f; // Mantém o personagem "colado" ao chão
-        }
+       
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+            velocidadeJogador.y = Mathf.Sqrt(forcaPulo * -2f * gravidade);
 
-        if (jumpRequest && isGrounded)
-        {
-            velocidadeVertical.y = Mathf.Sqrt(forcaPulo * -2f * gravidade);
-            if (debugMode) Debug.Log("PULOU!");
-        }
+     
+        velocidadeJogador.y += gravidade * Time.deltaTime;
 
-        jumpRequest = false;
-    }
 
-    void FixedUpdate()
-    {
-        float moveX = Input.GetAxisRaw("Horizontal");
-        float moveZ = Input.GetAxisRaw("Vertical");
-
-        Vector3 direcao = new Vector3(moveX, 0f, moveZ).normalized;
-
-        // Movimento horizontal
-        Vector3 movimento = direcao * velocidade;
-
-        // Aplica gravidade
-        velocidadeVertical.y += gravidade * Time.fixedDeltaTime;
-
-        // Move o personagem
-        controller.Move((movimento + velocidadeVertical) * Time.fixedDeltaTime);
-
-        // Rota��o suave
-        if (direcao.magnitude >= 0.1f)
-        {
-            Quaternion rotacaoAlvo = Quaternion.LookRotation(direcao, Vector3.up);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotacaoAlvo, velocidadeRotacao * Time.fixedDeltaTime);
-        }
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
-        }
-        else
-        {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(transform.position, transform.position + Vector3.down * (0.1f + (controller != null ? controller.height / 2f : 1f)));
-        }
+        controller.Move(velocidadeJogador * Time.deltaTime);
     }
 }

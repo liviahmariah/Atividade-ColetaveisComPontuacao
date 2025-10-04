@@ -1,25 +1,8 @@
-using UnityEngine;
-using TMPro;
-
-public class Pontuacao : MonoBehaviour
+private void AdicionarPontos(int valor)
 {
-    public static Pontuacao instance;   // Singleton
-    public int pontos = 0;              // Pontos atuais
-    public TMP_Text textoPontuacao;     // Arraste o TMP_Text do Canvas aqui
+    pontos += valor;
+    Debug.Log("AdicionarPontos chamado! Valor: " + valor + " | Total: " + pontos);
 
-    void Awake()
-    {
-        if (instance == null)
-            instance = this;
-        else
-            Destroy(gameObject);
-    }
-
-    public void AdicionarPontos(int valor)
-    {
-        pontos += valor;
-
-        if (textoPontuacao != null)
-            textoPontuacao.text = "Pontos: " + pontos;
-    }
+    if (textoPontuacao != null)
+        textoPontuacao.text = "Pontos: " + pontos;
 }
