@@ -10,7 +10,6 @@ public class Coletavel : MonoBehaviour
         {
             Pontuacao.instance.AdicionarPontos(valor); 
             Destroy(gameObject); 
-            Pontuacao.instance.AdicionarPontos(valor);
         }
     }
 }
