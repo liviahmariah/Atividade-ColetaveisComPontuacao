@@ -1,52 +1,62 @@
 using UnityEngine;
 
-public class SnowSpawner : MonoBehaviour
+public class SnowSpawner: MonoBehaviour
 {
-    public GameObject snowPrefab;
-    public float terrainSize = 500f;
-    public float spawnHeight = 100f;
-    public float fallSpeed = 2f;
-    public int maxSnowflakes = 300;
-    public float spawnInterval = 0.1f;
+    public GameObject flocoPrefab;          // O floco que cai
+    public GameObject neveAcumuladaPrefab;  // A neve que fica no chão
 
-    private float timer = 0f;
-    private int activeSnowflakes = 0;
+    public float intensidade = 200f;        // Quantos flocos caem por segundo
+    public float alturaExtra = 20f;         // Altura acima do chão onde nasce a neve
+    public float velocidadeQueda = 10f;     // Velocidade da neve caindo
+
+    private Terrain terreno;
+    private TerrainData dados;
+    private float acumulador;
+
+    void Start()
+    {
+        terreno = Terrain.activeTerrain;
+        dados = terreno.terrainData;
+    }
 
     void Update()
     {
-        timer += Time.deltaTime;
+        // Quantos flocos devem cair neste frame
+        float flocosPorFrame = intensidade * Time.deltaTime;
 
-        // A cada intervalo, cria um novo floco
-        if (timer >= spawnInterval && activeSnowflakes < maxSnowflakes)
+        acumulador += flocosPorFrame;
+
+        while (acumulador >= 1f)
         {
-            SpawnSnowflake();
-            timer = 0f;
+            SpawnFloco();
+            acumulador -= 1f;
         }
     }
 
-    void SpawnSnowflake()
+    void SpawnFloco()
     {
-        // Posição aleatória dentro do terreno
-        Vector3 pos = new Vector3(
-            Random.Range(0, terrainSize),
-            spawnHeight,
-            Random.Range(0, terrainSize)
+        float largura = dados.size.x;
+        float comprimento = dados.size.z;
+
+        // posição aleatória no terreno
+        float x = Random.Range(0, largura);
+        float z = Random.Range(0, comprimento);
+
+        // altura do terreno
+        float yTerreno = terreno.SampleHeight(new Vector3(x, 0, z));
+
+        // posição final onde o floco nasce
+        Vector3 posFinal = new Vector3(
+            x,
+            yTerreno + alturaExtra,
+            z
         );
 
-        GameObject flake = Instantiate(snowPrefab, pos, Quaternion.identity);
-        activeSnowflakes++;
+        GameObject floco = Instantiate(flocoPrefab, posFinal, Quaternion.identity);
 
-        // Faz o floco cair
-        Rigidbody rb = flake.AddComponent<Rigidbody>();
-        rb.useGravity = false;
-
-        // Controla a queda manualmente
-        flake.AddComponent<SnowFall>().Init(this, fallSpeed);
-    }
-
-    // Chamado quando o floco se destrói
-    public void RemoveFlake()
-    {
-        activeSnowflakes--;
+        // adiciona comportamento de queda
+        SnowFall queda = floco.AddComponent<SnowFall>();
+        queda.velocidade = velocidadeQueda;
+        queda.neveAcumuladaPrefab = neveAcumuladaPrefab;
     }
 }
