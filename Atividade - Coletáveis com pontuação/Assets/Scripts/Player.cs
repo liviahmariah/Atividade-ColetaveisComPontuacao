@@ -21,18 +21,26 @@ public class PlayerController3D : MonoBehaviour
         controller = GetComponent<CharacterController>();
 
         if (cameraTransform == null && Camera.main != null)
-            cameraTransform = Camera.main.transform; 
+            cameraTransform = Camera.main.transform;
     }
 
     void Update()
     {
-    
+        // --- SALVAR COM S ---
+        if (Input.GetKeyDown(KeyCode.S))
+            GameManager.instance.Salvar();
+
+        // --- CARREGAR COM L ---
+        if (Input.GetKeyDown(KeyCode.L))
+            CarregarPosicaoSalva();
+
+        // ----- Movimento normal do player -----
+
         isGrounded = controller.isGrounded;
 
         if (isGrounded && velocidadeJogador.y < 0)
             velocidadeJogador.y = -2f;
 
-       
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
 
@@ -46,24 +54,39 @@ public class PlayerController3D : MonoBehaviour
 
         Vector3 move = (forward * moveZ + right * moveX).normalized;
 
-
         controller.Move(move * velocidade * Time.deltaTime);
 
-        
         if (move.magnitude >= 0.1f)
         {
             Quaternion rotacaoAlvo = Quaternion.LookRotation(move, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotacaoAlvo, velocidadeRotacao * Time.deltaTime);
         }
 
-       
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
             velocidadeJogador.y = Mathf.Sqrt(forcaPulo * -2f * gravidade);
 
-     
         velocidadeJogador.y += gravidade * Time.deltaTime;
 
-
         controller.Move(velocidadeJogador * Time.deltaTime);
+    }
+
+    void CarregarPosicaoSalva()
+    {
+        SaveData data = SaveSystem.CarregarJogo();
+        if (data != null)
+        {
+            controller.enabled = false;
+
+            Vector3 novaPos = new Vector3(data.playerX, data.playerY, data.playerZ);
+            transform.position = novaPos;
+
+            controller.enabled = true;
+
+            Debug.Log("Posição carregada!");
+        }
+        else
+        {
+            Debug.LogWarning("Nenhum save encontrado.");
+        }
     }
 }
